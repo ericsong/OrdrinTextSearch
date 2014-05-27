@@ -1,0 +1,12 @@
+-API that translates text into tray items.
+
+input: names of foods
+output: tray orderable output
+
+input examples...
+-sushi
+-general tso's chicken
+-fried rice
+-california roll
+-pepperoni pizza
+-pad thai
