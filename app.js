@@ -45,8 +45,10 @@ function getTrays(rid, target, size, callback){
 		function(err, data){
 			var matches;
 
-			var items = sortItems(getOrderableItems(data.menu), target);
-			matches = items.slice(0, size);
+//			var items = sortItems(getOrderableItems(data.menu), target);
+//			matches = items.slice(0, size);
+
+			matches = crawl_menu(data.menu, target);
 
 			callback(matches);
 		}
@@ -87,6 +89,88 @@ function getOrderableItems(menu){
 }
 
 /**
+ * Takes a menu and returns a list of all orderable items
+ * @param {Menu} Menu object from Ordr.in's `Restaurant Details` API call
+ * @return {Array} Array of OrderableItem objects. OrderableItem contains name of dish and tray.
+ */
+function crawl_menu(menu, target){
+	var groups = menu; 
+	var items = [];
+
+	//find all orderable group level items
+	for(var i = 0; i < groups.length; i++){
+		var groupitems = groups[i].children;
+		for(var j = 0; j < groupitems.length; j++){
+			var group_name = cutIndex(groupitems[j].name);
+			items.push({'name': group_name, 'tray': groupitems[j].id + "/1", 'data': groupitems[j]});
+		}
+	}
+
+	//find best group match
+	items = sortItems(items, target);
+	var bestmatch = items[0].data;
+	var options = [];
+
+	if(!bestmatch.children){
+		//if best match has no children, return the item as is 
+		return bestmatch;
+	}else{
+		var option_groups = bestmatch.children;
+		var all_options = [];	
+
+		//add best matching sub options	
+		for(var i = 0; i < option_groups.length; i++){
+			var chosen_options = [];
+
+			//determine max/min options
+			var max_items = option_groups[i].max_child_select;
+			var min_items = option_groups[i].min_child_select;
+
+			//add all suboptions and generate a matching score
+			var option_items = [];
+			for(var j = 0; j < option_groups[i].children.length; j++){
+				option_items.push({
+					'name': option_groups[i].children[j].name, 
+					'id': option_groups[i].children[j].id,
+					'score': tokenCompare(option_groups[i].children[j].name, target)
+				});	
+			}	
+
+			option_items.sort(function(a, b){
+				if(a.score < b.score)
+					return -1;
+				else if(b.score > a.score)
+					return 1;
+				else
+					return 0;
+			});
+		
+			//run a loop, if element is > some threshold and items.length < maxitems, add to options
+			for(var j = 0; j < option_items.length; j++){
+				if(option_items[j].score < 3){
+					chosen_options.push(option_items[j]);
+					option_items.shift();
+					
+					//check if max item length was hit
+					if(chosen_options.length == max_items)
+						break;
+				}
+			}
+
+			//if items.length is empty, add the top _minitems_ number of matches
+			while(chosen_options.length < min_items){
+				chosen_options.push(option_items.shift());
+			}
+		
+			all_options = all_options.concat(chosen_options);
+			options = all_options;
+		}
+	}
+
+	return {group: bestmatch, options: options};
+}
+
+/**
  * Sorting function for OrderableItems
  * @param {Array} items - Array of OrderableItems
  * @param {String} target - String description of dish to match to
@@ -101,6 +185,27 @@ function sortItems(items, target){
 				return 1;	
 		}
 	);
+}
+
+function tokenize(str){
+	return str.split(" ");
+}
+
+function tokenCompare(str, target){
+	var score = 9999999;
+
+	var str_tokens = tokenize(str);
+	var target_tokens = tokenize(target);
+	
+	for(var i = 0; i < str_tokens.length; i++){
+		for(var j = 0; j < target_tokens.length; j++){
+			var ld_score = ld.levDist(str_tokens[i], target_tokens[j]); 
+			if(ld_score < score)
+				score = ld_score;
+		}
+	}
+
+	return score;	
 }
 
 /**
