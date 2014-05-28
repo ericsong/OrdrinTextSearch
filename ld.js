@@ -49,4 +49,12 @@ var levDist = function(s, t) {
     return d[n][m];
 }
 
-console.log(levDist("pepperoni pizza", "chicken pasta salad"));
+var compScore = function(a, b){
+	var ld_score = levDist(a, b);
+	var length_diff = Math.abs(a.length - b.length);
+
+	return ld_score - length_diff + length_diff/6;
+}
+
+exports.levDist = levDist;
+exports.compScore = compScore;

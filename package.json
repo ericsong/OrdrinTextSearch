@@ -1,0 +1,16 @@
+{
+  "name": "TrackrBot",
+  "description": "Bot that tracks values",
+  "version": "0.0.1",
+  "author": "Varun Arora",
+  "scripts": {
+    "start": "nodejs server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ericsong/TrackrBot"
+  },
+  "dependencies": {
+    "express": "3.x"
+ }
+}
