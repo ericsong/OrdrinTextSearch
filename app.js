@@ -107,7 +107,7 @@ function crawl_menu(menu, target){
 	}
 
 	//find best group match
-	items = sortItems(items, target);
+	items = sortGroupItems(items, target);
 	var bestmatch = items[0].data;
 	var options = [];
 
@@ -185,6 +185,51 @@ function sortItems(items, target){
 				return 1;	
 		}
 	);
+}
+
+function sortGroupItems(items, target){
+	return items.sort(
+		function(a, b){
+			if(groupCompare(a.name, target) < groupCompare(b.name, target))
+	    			return 1;
+			else
+	    			return -1;
+		}		    
+	);
+}
+
+function groupCompare(str, target){
+	var score = 0;
+	var target_tokens = target.split(" ");
+	var targets = [];
+
+	for(var i = 0; i < target_tokens.length; i++){	
+		var new_target = "";
+		for(var j = i; j < target_tokens.length; j++){
+			new_target += target_tokens[j] + " ";
+		}
+
+		targets.push(new_target.trim());
+	}
+
+	for(var i = 0; i < targets.length; i++){
+	    	var target_string = targets[i];
+		for(var j = 0; j < str.length - target_string.length; j++){
+		    	var str_string = str.substring(j, j+ target_string.length);
+
+			var ld_score = ld.levDist(str_string, target_string);
+			var c_score = target_string.length / (ld_score + 1);
+
+			if(c_score > score)
+				score = c_score;
+		}
+	}
+
+	return score;
+}
+
+function findOptions(group, target){
+
 }
 
 function tokenize(str){

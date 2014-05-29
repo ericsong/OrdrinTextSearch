@@ -1,4 +1,2 @@
--expand search space
-	-combination of strings
-	-add min/max suboption permutations
--lowercase all things
+-add score deduction based on weight for groupCompare
+-account for simple food phrases, "pizza with cheese, anchovies, etc"
