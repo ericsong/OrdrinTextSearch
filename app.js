@@ -48,7 +48,19 @@ function getTrays(rid, target, size, callback){
 //			var items = sortItems(getOrderableItems(data.menu), target);
 //			matches = items.slice(0, size);
 
-			matches = crawl_menu(data.menu, target);
+			matches = sortItems(getOrderableItems(data.menu), target).slice(0, 5);
+
+			for(var i = 0; i < 5; i++){
+				matches[i].score = calcMatchingScore(target, matches[i]);
+			}
+
+			matches = matches.concat(crawl_menu(data.menu, target));
+
+			for(var i = 5; i < matches.length; i++){
+				matches[i].score = calcMatchingScore(target, matches[i].data, matches[i].options);
+			}
+
+			sortByMatchingScore(matches);
 
 			callback(matches);
 		}
@@ -108,66 +120,27 @@ function crawl_menu(menu, target){
 
 	//find best group match
 	items = sortGroupItems(items, target);
-	var bestmatch = items[0].data;
-	var options = [];
+	var bestmatches = [];
+	for(var i = 0; i < 5; i++){
+		bestmatches.push(items[i].data);
+	}
 
-	if(!bestmatch.children){
-		//if best match has no children, return the item as is 
-		return bestmatch;
-	}else{
-		var option_groups = bestmatch.children;
-		var all_options = [];	
-
-		//add best matching sub options	
-		for(var i = 0; i < option_groups.length; i++){
-			var chosen_options = [];
-
-			//determine max/min options
-			var max_items = option_groups[i].max_child_select;
-			var min_items = option_groups[i].min_child_select;
-
-			//add all suboptions and generate a matching score
-			var option_items = [];
-			for(var j = 0; j < option_groups[i].children.length; j++){
-				option_items.push({
-					'name': option_groups[i].children[j].name, 
-					'id': option_groups[i].children[j].id,
-					'score': tokenCompare(option_groups[i].children[j].name, target)
-				});	
-			}	
-
-			option_items.sort(function(a, b){
-				if(a.score < b.score)
-					return -1;
-				else if(b.score > a.score)
-					return 1;
-				else
-					return 0;
+	var matches = [];
+	for(var i = 0; i < bestmatches.length; i++){
+		if(!bestmatches[i].children){
+			matches.push({
+				data: bestmatches[i],
+			    	options: []
 			});
-		
-			//run a loop, if element is > some threshold and items.length < maxitems, add to options
-			for(var j = 0; j < option_items.length; j++){
-				if(option_items[j].score < 3){
-					chosen_options.push(option_items[j]);
-					option_items.shift();
-					
-					//check if max item length was hit
-					if(chosen_options.length == max_items)
-						break;
-				}
-			}
-
-			//if items.length is empty, add the top _minitems_ number of matches
-			while(chosen_options.length < min_items){
-				chosen_options.push(option_items.shift());
-			}
-		
-			all_options = all_options.concat(chosen_options);
-			options = all_options;
+		}else{
+			matches.push({
+				data: bestmatches[i],
+				options: findOptions(bestmatches[i], target)
+			});
 		}
 	}
 
-	return {group: bestmatch, options: options};
+	return matches;
 }
 
 /**
@@ -229,7 +202,70 @@ function groupCompare(str, target){
 }
 
 function findOptions(group, target){
+	var option_groups = group.children;
+	var all_options = [];	
 
+	//add best matching sub options	
+	for(var i = 0; i < option_groups.length; i++){
+		var chosen_options = [];
+
+		//determine max/min options
+		var max_items = option_groups[i].max_child_select;
+		var min_items = option_groups[i].min_child_select;
+
+		//add all suboptions and generate a matching score
+		var option_items = [];
+		for(var j = 0; j < option_groups[i].children.length; j++){
+			option_items.push({
+				'name': option_groups[i].children[j].name, 
+				'id': option_groups[i].children[j].id,
+				'score': itemCompare(option_groups[i].children[j].name, target)
+			});	
+		}	
+
+		option_items.sort(function(a, b){
+			if(a.score < b.score)
+				return -1;
+			else if(b.score > a.score)
+				return 1;
+			else
+				return 0;
+		});
+	
+		//run a loop, if element is > some threshold and items.length < maxitems, add to options
+		for(var j = 0; j < option_items.length; j++){
+			if(option_items[j].score < 3){
+				chosen_options.push(option_items[j]);
+				option_items.shift();
+				
+				//check if max item length was hit
+				if(chosen_options.length == max_items)
+					break;
+			}
+		}
+
+		//if items.length is empty, add the top _minitems_ number of matches
+		while(chosen_options.length < min_items){
+			chosen_options.push(option_items.shift());
+		}
+	
+		all_options = all_options.concat(chosen_options);
+	}
+
+	return all_options;
+}
+
+function itemCompare(str, target){
+	var score = 9999999999;
+
+	for(var i = 0; i < target.length - str.length; i++){
+		var target_substring = target.substring(i, i + str.length);
+		var ld_score = ld.levDist(str, target_substring);
+		if(ld_score < score)
+			score = ld_score;
+	}
+
+	return score;
 }
 
 function tokenize(str){
@@ -251,6 +287,85 @@ function tokenCompare(str, target){
 	}
 
 	return score;	
+}
+
+//calculates how well group/option combination matches to target
+function calcMatchingScore(target, group, options){
+	if(typeof(options)==='undefined') options = [];
+
+	//tokenize target
+	var target_tokens = tokenize(target);
+	var match_tokens = tokenize(group.name);
+
+	for(var i = 0; i < options.length; i++){
+		match_tokens = match_tokens.concat(tokenize(options[i].name));
+	}
+
+	//number of tokens in target that get matched under group/items
+	var hit_score = 0;
+	for(var i = 0; i < target_tokens.length; i++){
+		for(var j = 0; j < match_tokens.length; j++){
+			if(isWordMatch(target_tokens[i], match_tokens[j])){
+				hit_score++;
+				break;
+			}	    
+		}
+	}
+
+	//number of tokens in group/items that do not matched in target
+	var miss_score = 0;
+	for(var i = 0; i < match_tokens.length; i++){
+	    	var hit = false;
+		for(var j = 0; j < target_tokens.length; j++){
+			if(isWordMatch(match_tokens[i], target_tokens[j])){
+				hit = true;
+			}
+		}
+
+		if(!hit)
+		    miss_score++;
+	}	    
+
+	var size_score = group.name.length;
+	for(var i = 0; i < options.length; i++)
+		size_score += options[i].name.length;
+
+	return {hit_score: hit_score, miss_score: miss_score, size_score: size_score};
+}
+
+function sortByMatchingScore(items){
+	return items.sort(
+		function(a, b){
+			if(a.score.hit_score < b.score.hit_score){
+	    			return 1;
+			}else if(a.score.hit_score > b.score.hit_score){
+	    			return -1;
+			}else{
+				if(a.score.miss_score > b.score.miss_score){
+					return 1;
+				}else if(a.score.miss_score < b.score.miss_score){
+				   	return -1; 
+				}else{
+					if(a.score.size_score > b.score.size_score){
+						return 1;	
+					}else if(a.score.size_score < b.score.size_score){
+						return -1;
+					}else{
+						return 0;
+					}
+				}
+			}
+		}		    
+	);
+}
+
+function isWordMatch(a, b){
+	var ld_score = ld.levDist(a, b);
+	
+	if(ld_score < 3)
+	    return true;
+	else
+	    return false;
 }
 
 /**
