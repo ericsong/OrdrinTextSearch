@@ -45,9 +45,6 @@ function getTrays(rid, target, size, callback){
 		function(err, data){
 			var matches;
 
-//			var items = sortItems(getOrderableItems(data.menu), target);
-//			matches = items.slice(0, size);
-
 			matches = sortItems(getOrderableItems(data.menu), target).slice(0, 5);
 
 			for(var i = 0; i < 5; i++){
@@ -101,9 +98,10 @@ function getOrderableItems(menu){
 }
 
 /**
- * Takes a menu and returns a list of all orderable items
+ * Find matches by intelligently "reading" through the menu and adding options as needed
  * @param {Menu} Menu object from Ordr.in's `Restaurant Details` API call
- * @return {Array} Array of OrderableItem objects. OrderableItem contains name of dish and tray.
+ * @param {String} target - user inputted text description
+ * @return {Array} Array of matches
  */
 function crawl_menu(menu, target){
 	var groups = menu; 
@@ -121,7 +119,7 @@ function crawl_menu(menu, target){
 	//find best group match
 	items = sortGroupItems(items, target);
 	var bestmatches = [];
-	for(var i = 0; i < 5; i++){
+	for(var i = 0; i < items.length; i++){
 		bestmatches.push(items[i].data);
 	}
 
@@ -160,6 +158,12 @@ function sortItems(items, target){
 	);
 }
 
+/**
+ * Sort array of group level items 
+ * @param {Array} items - array of menu group level items
+ * @param {String} target - user inputted text description
+ * @return {Array} `items` sorted from best match to least
+ */
 function sortGroupItems(items, target){
 	return items.sort(
 		function(a, b){
@@ -171,6 +175,12 @@ function sortGroupItems(items, target){
 	);
 }
 
+/**
+ * Calculate a score for how well a menu group's name matches a text
+ * @param {String} str - Group menu's name
+ * @param {String} target - User inputted text description
+ * @return {Number} score value. Higher is better
+ */
 function groupCompare(str, target){
 	var score = 0;
 	var target_tokens = target.split(" ");
@@ -201,6 +211,12 @@ function groupCompare(str, target){
 	return score;
 }
 
+/**
+ * Determine which options are wanted
+ * @param {GroupItem} group - Group level item from ordr.in's menu. Function will search this group's options
+ * @param {String} target - User inputted text decription
+ * @return {Array} Array of option level items
+ */
 function findOptions(group, target){
 	var option_groups = group.children;
 	var all_options = [];	
@@ -255,6 +271,8 @@ function findOptions(group, target){
 	return all_options;
 }
 
+/**
+ */
 function itemCompare(str, target){
 	var score = 9999999999;
 
@@ -268,28 +286,22 @@ function itemCompare(str, target){
 	return score;
 }
 
+/**
+ * Get a string's words
+ * @param {String} str
+ * @return {Array} Array containing all words in `str`
+ */
 function tokenize(str){
 	return str.split(" ");
 }
 
-function tokenCompare(str, target){
-	var score = 9999999;
-
-	var str_tokens = tokenize(str);
-	var target_tokens = tokenize(target);
-	
-	for(var i = 0; i < str_tokens.length; i++){
-		for(var j = 0; j < target_tokens.length; j++){
-			var ld_score = ld.levDist(str_tokens[i], target_tokens[j]); 
-			if(ld_score < score)
-				score = ld_score;
-		}
-	}
-
-	return score;	
-}
-
-//calculates how well group/option combination matches to target
+/**
+ * Calculate a score representing how well group/option combination matches to target
+ * @param {String} target - User inputted text description
+ * @param {GroupItem} group - Group level item from ordr.in's menu
+ * @param {Array} options - Array of option level items from ordr.in's menu
+ * @return {MatchingScore} hit_score - number of tokens in `target` that matched, miss_score - number of tokens in `group` and `options` that missed, size_score - string length of `group` and `options`
+ */
 function calcMatchingScore(target, group, options){
 	if(typeof(options)==='undefined') options = [];
 
@@ -333,6 +345,12 @@ function calcMatchingScore(target, group, options){
 	return {hit_score: hit_score, miss_score: miss_score, size_score: size_score};
 }
 
+
+/**
+ * Sort an array based on its "Matching Score"
+ * @param {Array} items
+ * @param {Array} `items` sorted from best match to least
+ */
 function sortByMatchingScore(items){
 	return items.sort(
 		function(a, b){
@@ -359,10 +377,16 @@ function sortByMatchingScore(items){
 	);
 }
 
+/**
+ * Checks if two words are the same while accounting for spelling errors
+ * @param {String} a
+ * @param {String} b
+ * @param {Boolean} True is similar, False if not
+ */
 function isWordMatch(a, b){
 	var ld_score = ld.levDist(a, b);
 	
-	if(ld_score < 3)
+	if(ld_score < 2)
 	    return true;
 	else
 	    return false;
