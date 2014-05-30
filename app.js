@@ -218,9 +218,9 @@ function extractTray(selection){
 	//calculate price
 	var price = 0;
 
-	price = selection.group.price;
+	price = parseFloat(selection.group.price);
 	for(var i = 0; i < selection.options.length; i++){
-		price += selection.options[i].price;
+		price += parseFloat(selection.options[i].price);
 	}
 
 	return {name: tray_name, tray: tray_string, price: price};	
