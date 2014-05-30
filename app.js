@@ -223,7 +223,7 @@ function extractTray(selection){
 		price += parseFloat(selection.options[i].price);
 	}
 
-	return {name: tray_name, tray: tray_string, price: price};	
+	return {name: tray_name, tray: tray_string, price: price.toFixed(2)};	
 }
 
 /**
@@ -324,18 +324,23 @@ function findOptions(group, target){
 		option_items.sort(function(a, b){
 			if(a.score < b.score)
 				return -1;
-			else if(b.score > a.score)
+			else if(a.score > b.score)
 				return 1;
 			else
 				return 0;
 		});
-	
+
+		console.log(option_items[0]);
+		console.log(option_items[1]);
+		console.log(option_items[2]);
+
 		//run a loop, if element is > some threshold and items.length < maxitems, add to options
 		for(var j = 0; j < option_items.length; j++){
-			if(option_items[j].score < 3){
+			if(option_items[j].score < 2){
 				chosen_options.push(option_items[j]);
 				option_items.shift();
-				
+				j--;	
+
 				//check if max item length was hit
 				if(chosen_options.length == max_items)
 					break;
@@ -466,9 +471,20 @@ function sortByMatchingScore(items){
  * @param {Boolean} True is similar, False if not
  */
 function isWordMatch(a, b){
+	var min_length = (a.length < b.length) ? a.length : b.length;
+	var error_margin;
+
+	if(min_length < 5)
+		error_margin = 0;
+	else if(min_length < 8)
+	    	error_margin = 1;
+	else
+	    	error_margin = 2;
+
+
 	var ld_score = ld.levDist(a, b);
 	
-	if(ld_score < 2)
+	if(ld_score <= error_margin)
 	    return true;
 	else
 	    return false;

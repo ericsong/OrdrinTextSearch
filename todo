@@ -1,2 +1,4 @@
--account for simple food phrases, "pizza with cheese, anchovies, etc"
+-account for simple food phrases, "with, and, without"
 -lowercase?
+-take a second look at item compare (pepperoni bug)
+-scalable error margin
