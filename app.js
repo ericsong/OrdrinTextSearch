@@ -529,38 +529,3 @@ function hasUpperCase(str){
 		return false;
 	}
 }
-
-/*
-			ordrin_api.order_guest(
-				{
-					rid: rid,
-					tray: tray,
-					tip: '10.05',
-					delivery_date: 'ASAP',
-					delivery_time: 'ASAP',
-					first_name: 'Eric',
-					last_name: 'Song',
-					addr: '902 Broadway',
-					city: 'New York',
-					state: 'NY',
-					zip: '10010',
-					phone: '212-555-1212',
-					em: 'regonics@gmail.com',
-					card_name: 'Eric Song',
-					card_number: '4111111111111111',
-					card_cvc: '173',
-					card_expiry: '01/2018',
-					card_bill_addr: '14 Mary Ellen Drive',
-					card_bill_city: 'Edison',
-					card_bill_state: 'NJ',
-					card_bill_zip: '08820',
-					card_bill_phone: '2018938715'
-				},
-				function(err, data){
-					console.log(err);
-					console.log(data);
-				}
-			);
-*/
-
-

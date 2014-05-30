@@ -1,3 +1,2 @@
--add score deduction based on weight for groupCompare
 -account for simple food phrases, "pizza with cheese, anchovies, etc"
--add max/min validation to results found through brute force
+-lowercase?
