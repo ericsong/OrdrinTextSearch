@@ -19,11 +19,50 @@ app.get('/TextSearch', function(req, res){
 	var size = req.query.size;
 
 
-	getTrays(rid, target, size, 
+	getMatches(rid, target, size, 
 		function(data){
 			res.send(data);
 		}
 	);
+});
+
+app.get('/testOrder', function(req, res){
+   	var rid = req.query.rid;
+	var tray = req.query.tray;
+
+	ordrin_api.order_guest(
+		{
+			rid: rid,
+			tray: tray,
+			tip: '10.05',
+			delivery_date: 'ASAP',
+			delivery_time: 'ASAP',
+			first_name: 'Eric',
+			last_name: 'Song',
+			addr: '902 Broadway',
+			city: 'New York',
+			state: 'NY',
+			zip: '10010',
+			phone: '212-555-1212',
+			em: 'regonics@gmail.com',
+			card_name: 'Eric Song',
+			card_number: '4111111111111111',
+			card_cvc: '173',
+			card_expiry: '01/2018',
+			card_bill_addr: '14 Mary Ellen Drive',
+			card_bill_city: 'Edison',
+			card_bill_state: 'NJ',
+			card_bill_zip: '08820',
+			card_bill_phone: '2018938715'
+		},
+		function(err, data){
+			console.log(err);
+			console.log(data);
+
+			res.send(data);
+		}
+	);
+
 });
 
 server.listen(app.get('port'), function(){
@@ -38,23 +77,29 @@ server.listen(app.get('port'), function(){
  * @param {Function} callback - callback function to run on completion
  * @return {Array} List of top matches. Each list item contains name of dish and tray
  */
-function getTrays(rid, target, size, callback){
+function getMatches(rid, target, size, callback){
 	size = typeof size !== 'undefined' ? size : 10;
 
 	ordrin_api.restaurant_details({rid: rid},
 		function(err, data){
 			var matches;
 
+	/*
 			matches = sortItems(getOrderableItems(data.menu), target).slice(0, 5);
-
 			for(var i = 0; i < 5; i++){
 				matches[i].score = calcMatchingScore(target, matches[i]);
 			}
 
 			matches = matches.concat(crawl_menu(data.menu, target));
+	*/
 
-			for(var i = 5; i < matches.length; i++){
-				matches[i].score = calcMatchingScore(target, matches[i].data, matches[i].options);
+			matches = crawl_menu(data.menu, target);		
+			for(var i = 0; i < matches.length; i++){
+				matches[i].score = calcMatchingScore(target, matches[i].group, matches[i].options);
+
+				var traydata = extractTray(matches[i]);
+				matches[i].name = traydata.name;
+				matches[i].tray = traydata.tray;
 			}
 
 			sortByMatchingScore(matches);
@@ -101,7 +146,7 @@ function getOrderableItems(menu){
  * Find matches by intelligently "reading" through the menu and adding options as needed
  * @param {Menu} Menu object from Ordr.in's `Restaurant Details` API call
  * @param {String} target - user inputted text description
- * @return {Array} Array of matches
+ * @return {Array} Array of matches {group - groupitem, options - optionitems}
  */
 function crawl_menu(menu, target){
 	var groups = menu; 
@@ -127,18 +172,50 @@ function crawl_menu(menu, target){
 	for(var i = 0; i < bestmatches.length; i++){
 		if(!bestmatches[i].children){
 			matches.push({
-				data: bestmatches[i],
+				group: bestmatches[i],
 			    	options: []
 			});
 		}else{
 			matches.push({
-				data: bestmatches[i],
+				group: bestmatches[i],
 				options: findOptions(bestmatches[i], target)
 			});
 		}
 	}
 
 	return matches;
+}
+
+/**
+ * Extract tray and tray's name
+ * @param {Selection} selection - {group, options}
+ * @return {TrayData} {tray - orderable tray string, name - text description of tray}
+ */
+function extractTray(selection){
+	//generate tray name
+	var tray_name = "";
+
+	tray_name = selection.group.name;
+	
+	if(selection.options.length > 0){
+		tray_name += " with";
+		for(var i = 0; i < selection.options.length; i++){
+			tray_name += " " + selection.options[i].name + " and";
+		}
+
+		tray_name = tray_name.slice(0, tray_name.length - 4);
+	}
+
+	//generate tray string
+	var tray_string = "";
+	
+	tray_string = selection.group.id + "/1";
+
+	for(var i = 0; i < selection.options.length; i++){
+		tray_string += "," + selection.options[i].id;
+	}
+
+	return {name: tray_name, tray: tray_string};	
 }
 
 /**
@@ -215,7 +292,7 @@ function groupCompare(str, target){
  * Determine which options are wanted
  * @param {GroupItem} group - Group level item from ordr.in's menu. Function will search this group's options
  * @param {String} target - User inputted text decription
- * @return {Array} Array of option level items
+ * @return {Array} Array of option level items + score
  */
 function findOptions(group, target){
 	var option_groups = group.children;
@@ -232,11 +309,8 @@ function findOptions(group, target){
 		//add all suboptions and generate a matching score
 		var option_items = [];
 		for(var j = 0; j < option_groups[i].children.length; j++){
-			option_items.push({
-				'name': option_groups[i].children[j].name, 
-				'id': option_groups[i].children[j].id,
-				'score': itemCompare(option_groups[i].children[j].name, target)
-			});	
+		    	option_items.push(option_groups[i].children[j]);
+			option_items[option_items.length-1].score = itemCompare(option_groups[i].children[j].name, target);
 		}	
 
 		option_items.sort(function(a, b){
