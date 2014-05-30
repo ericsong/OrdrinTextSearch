@@ -18,7 +18,6 @@ app.get('/TextSearch', function(req, res){
 	var target = req.query.target;
 	var size = req.query.size;
 
-
 	getMatches(rid, target, size, 
 		function(data){
 			res.send(data);
@@ -100,6 +99,7 @@ function getMatches(rid, target, size, callback){
 				var traydata = extractTray(matches[i]);
 				matches[i].name = traydata.name;
 				matches[i].tray = traydata.tray;
+				matches[i].price = traydata.price;
 			}
 
 			sortByMatchingScore(matches);
@@ -214,8 +214,16 @@ function extractTray(selection){
 	for(var i = 0; i < selection.options.length; i++){
 		tray_string += "," + selection.options[i].id;
 	}
+	
+	//calculate price
+	var price = 0;
 
-	return {name: tray_name, tray: tray_string};	
+	price = selection.group.price;
+	for(var i = 0; i < selection.options.length; i++){
+		price += selection.options[i].price;
+	}
+
+	return {name: tray_name, tray: tray_string, price: price};	
 }
 
 /**
