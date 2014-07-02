@@ -18,3 +18,6 @@ __options__ - option level items from ordr.in's menu
 __score__ - Matching score. Sorted by hit score (greater is better) -> miss score (lower is better) -> size score (lower is better)  
 __name__ - Text description of the matched item  
 __tray__ - Tray string used for ordr.in's order endpoint  
+
+things it do: 
+-cut off indexes such as (1., A., 1A., etc)

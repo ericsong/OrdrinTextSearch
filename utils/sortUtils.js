@@ -70,9 +70,10 @@
    * @return {Array} `items` sorted from best match to least
    */
   sortGroupItems = function sort_group_items(items, target){
+    target = stringUtils.optimizeTarget(target);
     return items.sort(
       function(a, b){
-        if(groupCompare(a.name, target) < groupCompare(b.name, target))
+        if(groupCompare(stringUtils.optimizeTarget(a.name), target) < groupCompare(stringUtils.optimizeTarget(b.name), target))
               return 1;
         else
               return -1;
@@ -101,9 +102,9 @@
     }
 
     for(var i = 0; i < targets.length; i++){
-          var target_string = targets[i];
+      var target_string = targets[i];
       for(var j = 0; j < str.length - target_string.length; j++){
-            var str_string = str.substring(j, j+ target_string.length);
+        var str_string = str.substring(j, j+ target_string.length);
 
         var ld_score = ld.levDist(str_string, target_string);
         var c_score = target_string.length / (ld_score + 1);
