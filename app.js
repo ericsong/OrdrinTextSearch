@@ -17,6 +17,8 @@
     var target = req.query.target;
     var size = req.query.size;
 
+    console.log("Searching for " ,target);
+
     menuUtils.getMatches(rid, target, size, 
       function(data){
         res.send(data);

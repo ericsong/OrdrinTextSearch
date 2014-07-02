@@ -109,6 +109,7 @@
     }
 
     var matches = [];
+    /*
     for(var i = 0; i < bestmatches.length; i++){
       if(!bestmatches[i].children){
         matches.push({
@@ -122,7 +123,20 @@
         });
       }
     }
-
+    */
+    for(var i = 0; i < bestmatches.length; i++){
+      matches.push({
+        group: bestmatches[i],
+            options: []
+      });
+      
+      if(bestmatches[i].children){
+        matches.push({
+          group: bestmatches[i],
+          options: findOptions(bestmatches[i], target)
+        });
+      }
+    }
     return matches;
   }
 

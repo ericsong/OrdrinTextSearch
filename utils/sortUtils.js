@@ -143,8 +143,9 @@
     if(typeof(options)==='undefined') options = [];
 
     //tokenize target
+    target = stringUtils.optimizeTarget(target);
     var target_tokens = stringUtils.tokenize(target);
-    var match_tokens = stringUtils.tokenize(group.name);
+    var match_tokens = stringUtils.tokenize(stringUtils.optimizeTarget(group.name));
 
     for(var i = 0; i < options.length; i++){
       match_tokens = match_tokens.concat(stringUtils.tokenize(options[i].name));
