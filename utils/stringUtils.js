@@ -94,6 +94,5 @@
 
   //Export public functions
   exports.tokenize = tokenize;
-  exports.isWordMatch = isWordMatch;
   exports.cutIndexString = cutIndexString;
 })();

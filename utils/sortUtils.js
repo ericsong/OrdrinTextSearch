@@ -153,7 +153,7 @@
     var hit_score = 0;
     for(var i = 0; i < target_tokens.length; i++){
       for(var j = 0; j < match_tokens.length; j++){
-        if(stringUtils.isWordMatch(target_tokens[i], match_tokens[j])){
+        if(isWordMatch(target_tokens[i], match_tokens[j])){
           hit_score++;
           break;
         }	    
@@ -165,7 +165,7 @@
     for(var i = 0; i < match_tokens.length; i++){
           var hit = false;
       for(var j = 0; j < target_tokens.length; j++){
-        if(stringUtils.isWordMatch(match_tokens[i], target_tokens[j])){
+        if(isWordMatch(match_tokens[i], target_tokens[j])){
           hit = true;
         }
       }
@@ -220,5 +220,4 @@
   exports.itemCompare = itemCompare; 
   exports.calcMatchingScore = calcMatchingScore; 
   exports.sortByMatchingScore = sortByMatchingScore; 
-  exports.extractTray = extractTray; 
 })();

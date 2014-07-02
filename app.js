@@ -2,11 +2,9 @@
 
   var http = require("http"),
       express = require("express"),
-      ordrin = require("ordrin-api"),
-      ld = require("./utils/menuUtils"),
+      menuUtils = require("./utils/menuUtils"),
       app = express(),
-      server = http.createServer(app),
-      ordrin_api = new ordrin.APIs("8l3kW3pv2UZXOebdQ-YU9qoUeE8GPPzj7_We-WxbKek", ordrin.TEST);
+      server = http.createServer(app);
 
   app.configure(function(){
     app.set('port', process.env.PORT || 8000);
@@ -19,7 +17,7 @@
     var target = req.query.target;
     var size = req.query.size;
 
-    getMatches(rid, target, size, 
+    menuUtils.getMatches(rid, target, size, 
       function(data){
         res.send(data);
       }
