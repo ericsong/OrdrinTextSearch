@@ -25,14 +25,18 @@
   * @param {Function} callback - callback function to run on completion
   * @return {Array} List of top matches. Each list item contains name of dish and tray
   */
-  function getMatches(rid, target, size, callback){
+  getMatches = function get_matches(options, callback){
+    var rid = options.rid,
+        target = options.target,
+        size = options.size;
+
     size = typeof size !== 'undefined' ? size : 10;
 
     ordrin_api.restaurant_details({rid: rid},
       function(err, data){
         var matches;
 
-        matches = crawl_menu(data.menu, target);		
+        matches = crawlMenu({ menu: data.menu, groupLevelMatching: options.groupLevelMatching }, target);		
         for(var i = 0; i < matches.length; i++){
           matches[i].score = sortUtils.calcMatchingScore(target, matches[i].group, matches[i].options);
 
@@ -54,7 +58,7 @@
    * @param {Menu} Menu object from Ordr.in's `Restaurant Details` API call
    * @return {Array} Array of OrderableItem objects. OrderableItem contains name of dish and tray.
    */
-  function getOrderableItems(menu){
+  getOrderableItems = function get_orderable_items(menu){
     var groups = menu; 
     var items = [];
 
@@ -88,9 +92,13 @@
    * @param {String} target - user inputted text description
    * @return {Array} Array of matches {group - groupitem, options - optionitems}
    */
-  function crawl_menu(menu, target){
-    var groups = menu; 
-    var items = [];
+  crawlMenu = function crawl_menu(options, target){
+    var menu = options.menu,
+        groupLevelMatching = options.groupLevelMatching,
+        groups = menu, 
+        items = [];
+
+    if(typeof(groupLevelMatching) === 'undefined') groupLevelMatching = false;
 
     //find all orderable group level items
     for(var i = 0; i < groups.length; i++){
@@ -109,26 +117,13 @@
     }
 
     var matches = [];
-    /*
     for(var i = 0; i < bestmatches.length; i++){
-      if(!bestmatches[i].children){
+      if(groupLevelMatching || !bestmatches[i].children) {
         matches.push({
           group: bestmatches[i],
-              options: []
-        });
-      }else{
-        matches.push({
-          group: bestmatches[i],
-          options: findOptions(bestmatches[i], target)
+          options: []
         });
       }
-    }
-    */
-    for(var i = 0; i < bestmatches.length; i++){
-      matches.push({
-        group: bestmatches[i],
-            options: []
-      });
       
       if(bestmatches[i].children){
         matches.push({
@@ -146,7 +141,7 @@
    * @param {String} target - User inputted text decription
    * @return {Array} Array of option level items + score
    */
-  function findOptions(group, target){
+  findOptions = function find_options(group, target){
     var option_groups = group.children;
     var all_options = [];	
 

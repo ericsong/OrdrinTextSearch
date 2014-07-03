@@ -16,14 +16,18 @@
     var rid = req.query.rid;
     var target = req.query.target;
     var size = req.query.size;
+    var groupLevelMatching = req.query.groupLevelMatching === '0' ? false : true;
 
-    console.log("Searching for " ,target);
+    console.log("Searching for " , target);
 
-    menuUtils.getMatches(rid, target, size, 
-      function(data){
-        res.send(data);
-      }
-    );
+    menuUtils.getMatches({
+      rid: rid,
+      target: target,
+      size: size, 
+      groupLevelMatching: groupLevelMatching
+    }, function(data){
+      res.send(data);
+    });
   });
 
   server.listen(app.get('port'), function(){
