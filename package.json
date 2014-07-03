@@ -13,6 +13,7 @@
   "dependencies": {
     "express": "3.x",
     "ordrin-api": "1.0.1",
-    "underscore": "1.6.0"
+    "underscore": "1.6.0",
+    "natural": "0.1.27"
  }
 }
