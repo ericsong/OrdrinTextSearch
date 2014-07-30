@@ -132,6 +132,7 @@
         });
       }
     }
+
     return matches;
   }
 
@@ -180,19 +181,23 @@
           j--;	
 
           //check if max item length was hit
-          if(chosen_options.length == max_items)
+          if(chosen_options.length === max_items)
             break;
         }
       }
 
       //if items.length is empty, add the top _minitems_ number of matches
       while(chosen_options.length < min_items){
-        chosen_options.push(option_items.shift());
+        if(option_items.length > 0){
+          chosen_options.push(option_items.shift());
+        } else {
+          break;
+        }
       }
     
       all_options = all_options.concat(chosen_options);
     }
-
+  
     return all_options;
   }
 
