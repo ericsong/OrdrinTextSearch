@@ -37,6 +37,7 @@
         var matches;
 
         matches = crawlMenu({ menu: data.menu, groupLevelMatching: options.groupLevelMatching }, target);		
+
         for(var i = 0; i < matches.length; i++){
           matches[i].score = sortUtils.calcMatchingScore(target, matches[i].group, matches[i].options);
 
@@ -47,6 +48,10 @@
         }
 
         sortUtils.sortByMatchingScore(matches);
+        for(var i = 0; i < matches.length; i++) {
+          if(matches[i].group.id === "23290633")
+            console.log("found");
+        }
 
         callback(matches);
       }
@@ -188,13 +193,14 @@
         if(option_items.length > 0){
           chosen_options.push(option_items.shift());
         } else {
+          console.log("breaking");
           break;
         }
       }
-    
+
       all_options = all_options.concat(chosen_options);
     }
-  
+ 
     return all_options;
   }
 

@@ -16,7 +16,11 @@
     var rid = req.query.rid;
     var target = req.query.target;
     var size = req.query.size;
-    var groupLevelMatching = req.query.groupLevelMatching === '0' ? false : true;
+    var groupLevelMatching = false;
+    
+    if(req.query.groupLevelMatching === 'true') {
+      groupLevelMatching = true;  
+    }
 
     console.log("Searching for " , target);
 
