@@ -22,7 +22,7 @@
       groupLevelMatching = true;  
     }
 
-    console.log("Searching for " , target);
+    console.log("Searching for " , target, " from :", rid);
 
     menuUtils.getMatches({
       rid: rid,

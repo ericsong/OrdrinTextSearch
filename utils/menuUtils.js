@@ -153,6 +153,9 @@
 
     //add best matching sub options	
     for(var i = 0; i < option_groups.length; i++){
+      if(!option_groups[i].children)
+        continue;
+
       var chosen_options = [];
 
       //determine max/min options
